@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlertaCBBA · FIRMS Bolivia — Centro de Comando</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <span style="font-size:20px">🇧🇴</span>
+      <div>
+        <h1>FIRMS · Bolivia</h1>
+        <span>NASA Fire Information Resource Mgmt System</span>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat hi"><div class="num" id="s-high">—</div><div class="lbl">Alta potencia</div></div>
+      <div class="stat med"><div class="num" id="s-med">—</div><div class="lbl">Media</div></div>
+      <div class="stat lo"><div class="num" id="s-total">—</div><div class="lbl">Total focos</div></div>
+    </div>
+    <div class="pill"><span class="ldot"></span><span id="status">Cargando…</span></div>
+  </div>
+
+  
+  <!-- CONTROLS BAR -->
+  <div class="keybar">
+    <label>🔑 FIRMS MAP KEY:</label>
+    <input type="text" id="map-key" placeholder="Ingresa tu MAP_KEY de NASA FIRMS..." value="2f9b09b9de898d0ba26a41145baffb46">
+    <button onclick="loadFires()">↺ Actualizar</button>
+    <a href="https://firms.modaps.eosdis.nasa.gov/mapserver/mapkey_status/?MAP_KEY=2f9b09b9de898d0ba26a41145baffb46" target="_blank" id="mapkey-status-link">Estado de transacciones →</a>
+  </div>
+
+  <!-- ALERT -->
+  <div id="alert-banner">⚠ &nbsp;<span id="alert-txt"></span></div>
+
+  <div class="main">
+    <div id="map"></div>
+
+    <div class="sidebar">
+
+      <!-- SENSOR -->
+      <div class="sb-sec">
+        <h2>Sensor</h2>
+        <div class="tabs" id="sensor-tabs">
+          <div class="tab on" data-s="VIIRS_NOAA20_NRT">VIIRS NOAA-20</div>
+          <div class="tab" data-s="VIIRS_SNPP_NRT">VIIRS S-NPP</div>
+          <div class="tab" data-s="MODIS_NRT">MODIS</div>
+        </div>
+      </div>
+
+      <!-- DÍAS -->
+      <div class="sb-sec">
+        <h2>Rango de días</h2>
+        <div class="tabs" id="day-tabs">
+          <div class="tab on" data-d="1">Hoy</div>
+          <div class="tab" data-d="2">2 días</div>
+          <div class="tab" data-d="3">3 días</div>
+          <div class="tab" data-d="5">5 días</div>
+        </div>
+      </div>
+
+      <!-- REGIÓN -->
+      <div class="sb-sec">
+        <h2>Región</h2>
+        <div class="chips" id="region-chips">
+          <div class="chip on" data-r="ALL">Todo el país</div>
+          <div class="chip" data-r="occ">Occidente</div>
+          <div class="chip" data-r="ori">Oriente</div>
+          <div class="chip" data-r="ama">Amazonía</div>
+        </div>
+      </div>
+
+      <!-- POTENCIA -->
+      <div class="sb-sec">
+        <h2>Potencia de fuego (FRP)</h2>
+        <div class="chips" id="frp-chips">
+          <div class="chip on" data-f="ALL">Todos</div>
+          <div class="chip" data-f="high">Alta (&gt;50 MW)</div>
+          <div class="chip" data-f="med">Media (10-50)</div>
+          <div class="chip" data-f="low">Baja (&lt;10)</div>
+        </div>
+      </div>
+
+      <!-- GUARDIAS / VIGILANTES -->
+      <div class="sb-sec">
+        <h2>Puntos de Vigilancia</h2>
+        <div class="guard-ctrl">
+          <button class="guard-toggle" id="guard-toggle" onclick="toggleGuardMode()">📍 Colocar Guardia</button>
+          <button class="guard-toggle" id="guard-clear" onclick="clearGuards()">✕ Limpiar</button>
+          <span class="guard-count" id="guard-count">0 guardias</span>
+        </div>
+      </div>
+
+      <!-- DATOS HISTÓRICOS -->
+      <div class="sb-sec">
+        <h2>Datos Históricos</h2>
+        <div class="history-bar" id="history-bar">
+          <div class="hist-stat">
+            <div class="h-val" id="hist-today">—</div>
+            <div class="h-lbl">Hoy</div>
+          </div>
+          <div class="hist-stat">
+            <div class="h-val" id="hist-total">—</div>
+            <div class="h-lbl">Almacenados</div>
+          </div>
+          <div class="hist-stat">
+            <div class="h-val" id="hist-alerts">—</div>
+            <div class="h-lbl">Enviadas</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="list" id="list">
+        <div class="loading">Ingresa tu MAP KEY y presiona "Cargar datos"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div class="toast-stack" id="toast-stack"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Firebase SDK -->
+<script type="module" src="app.js"></script>
+
+</body>
+</html>

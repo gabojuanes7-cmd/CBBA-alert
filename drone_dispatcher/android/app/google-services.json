@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "970959623297",
+    "project_id": "alerta-cbba-2026",
+    "storage_bucket": "alerta-cbba-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:970959623297:android:95d8a0b08c536f55dda980",
+        "android_client_info": {
+          "package_name": "com.example.drone_dispatcher"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuNqKnNySHIZJ7PnLgDx43GQDItacXeG4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
