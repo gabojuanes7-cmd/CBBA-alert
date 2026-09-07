@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlertaCBBA · FIRMS Bolivia — Centro de Comando</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- FontAwesome para iconos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Intro.js para el tutorial paso a paso -->
+<link rel="stylesheet" href="https://unpkg.com/intro.js/minified/introjs.min.css">
+<link rel="stylesheet" href="https://unpkg.com/intro.js/themes/introjs-modern.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <span style="font-size:20px">🇧🇴</span>
+      <div>
+        <h1>FIRMS · Bolivia</h1>
+        <span>NASA Fire Information Resource Mgmt System</span>
+      </div>
+    </div>
+    <div class="stats" data-intro="Aquí verás las estadísticas generales de los incendios detectados hoy." data-step="1">
+      <div class="stat hi"><div class="num" id="s-high">—</div><div class="lbl">Alta potencia</div></div>
+      <div class="stat med"><div class="num" id="s-med">—</div><div class="lbl">Media</div></div>
+      <div class="stat lo"><div class="num" id="s-total">—</div><div class="lbl">Total focos</div></div>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <div class="pill"><span class="ldot"></span><span id="status">Cargando…</span></div>
+      <button id="help-btn" class="help-btn" onclick="startTutorial()"><i class="fa-solid fa-circle-question"></i> Tutorial</button>
+    </div>
+  </div>
+
+  
+  <!-- CONTROLS BAR -->
+  <div class="keybar" data-intro="Necesitas una clave API de la NASA para obtener datos en tiempo real. Pégala aquí y presiona Actualizar." data-step="2">
+    <label><i class="fa-solid fa-key"></i> NASA FIRMS KEY:</label>
+    <input type="text" id="map-key" placeholder="Ingresa tu MAP_KEY de NASA FIRMS..." value="2f9b09b9de898d0ba26a41145baffb46">
+    <button onclick="loadFires()"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
+    <a href="https://firms.modaps.eosdis.nasa.gov/mapserver/mapkey_status/?MAP_KEY=2f9b09b9de898d0ba26a41145baffb46" target="_blank" id="mapkey-status-link" title="Verificar estado de transacciones de la API">
+      <i class="fa-solid fa-circle-info"></i> Estado API
+    </a>
+  </div>
+
+  <!-- ALERT -->
+  <div id="alert-banner"><i class="fa-solid fa-triangle-exclamation"></i> &nbsp;<span id="alert-txt"></span></div>
+
+  <div class="main">
+    <div id="map" data-intro="Este es el mapa principal. Los focos de calor aparecerán aquí. Puedes hacer clic en cualquiera de ellos para ver detalles y DESPACHAR UNA ALERTA." data-step="4"></div>
+
+    <div class="sidebar">
+      
+      <div class="sb-group-header">FILTROS DEL MAPA</div>
+
+      <!-- SENSOR -->
+      <div class="sb-sec" data-intro="Filtra los datos por el satélite que los detectó. Cada satélite tiene diferente resolución y hora de paso." data-step="3">
+        <h2><i class="fa-solid fa-satellite"></i> Sensor</h2>
+        <div class="tabs" id="sensor-tabs">
+          <div class="tab on" data-s="VIIRS_NOAA20_NRT">VIIRS NOAA-20</div>
+          <div class="tab" data-s="VIIRS_SNPP_NRT">VIIRS S-NPP</div>
+          <div class="tab" data-s="MODIS_NRT">MODIS</div>
+        </div>
+      </div>
+
+      <!-- DÍAS -->
+      <div class="sb-sec">
+        <h2><i class="fa-solid fa-calendar-days"></i> Rango de días</h2>
+        <div class="tabs" id="day-tabs">
+          <div class="tab on" data-d="1">Hoy</div>
+          <div class="tab" data-d="2">2 días</div>
+          <div class="tab" data-d="3">3 días</div>
+          <div class="tab" data-d="5">5 días</div>
+        </div>
+      </div>
+
+      <!-- REGIÓN -->
+      <div class="sb-sec">
+        <h2><i class="fa-solid fa-map-location-dot"></i> Región</h2>
+        <div class="chips" id="region-chips">
+          <div class="chip on" data-r="ALL">Todo el país</div>
+          <div class="chip" data-r="occ">Occidente</div>
+          <div class="chip" data-r="ori">Oriente</div>
+          <div class="chip" data-r="ama">Amazonía</div>
+        </div>
+      </div>
+
+      <!-- POTENCIA -->
+      <div class="sb-sec">
+        <h2><i class="fa-solid fa-fire"></i> Potencia de fuego (FRP)</h2>
+        <div class="chips" id="frp-chips">
+          <div class="chip on" data-f="ALL">Todos</div>
+          <div class="chip" data-f="high">Alta (&gt;50 MW)</div>
+          <div class="chip" data-f="med">Media (10-50)</div>
+          <div class="chip" data-f="low">Baja (&lt;10)</div>
+        </div>
+      </div>
+
+      <div class="sb-group-header" style="margin-top: 5px;">OPERACIONES</div>
+
+      <!-- GUARDIAS / VIGILANTES -->
+      <div class="sb-sec" data-intro="Usa este botón para colocar Guardias en el mapa. Una vez colocados, se generará un usuario y clave para que inicien sesión en la App Móvil." data-step="5">
+        <h2><i class="fa-solid fa-person-military-pointing"></i> Puntos de Vigilancia</h2>
+        <div class="guard-ctrl">
+          <button class="guard-toggle" id="guard-toggle" onclick="toggleGuardMode()"><i class="fa-solid fa-location-crosshairs"></i> Colocar Guardia</button>
+          <button class="guard-toggle" id="guard-clear" onclick="clearGuards()"><i class="fa-solid fa-xmark"></i> Limpiar</button>
+          <span class="guard-count" id="guard-count">0 guardias</span>
+        </div>
+      </div>
+
+      <!-- DATOS HISTÓRICOS -->
+      <div class="sb-sec" style="border-bottom: none;" data-intro="Aquí verás un registro de cuántas alertas has despachado exitosamente a la aplicación." data-step="6">
+        <h2><i class="fa-solid fa-clock-rotate-left"></i> Histórico (Alertas enviadas)</h2>
+        <div class="history-bar" id="history-bar">
+          <div class="hist-stat">
+            <div class="h-val" id="hist-today">—</div>
+            <div class="h-lbl">Hoy</div>
+          </div>
+          <div class="hist-stat">
+            <div class="h-val" id="hist-total">—</div>
+            <div class="h-lbl">Almacenados</div>
+          </div>
+          <div class="hist-stat">
+            <div class="h-val" id="hist-alerts">—</div>
+            <div class="h-lbl">Enviadas</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="list" id="list">
+        <div class="loading">Ingresa tu MAP KEY y presiona "Actualizar"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WELCOME MODAL (Ahora opcional) -->
+  <div class="modal-overlay" id="welcome-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-shield-halved"></i> Bienvenido a AlertaCBBA</h2>
+        <button class="modal-close" onclick="closeWelcomeModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p>Este es el <b>Centro de Comando</b>. Desde aquí puedes:</p>
+        <ul>
+          <li><i class="fa-solid fa-fire" style="color: #FF6B35; width: 20px;"></i> <b>Monitorear:</b> Ver focos de calor en tiempo real usando datos satelitales de la NASA.</li>
+          <li><i class="fa-solid fa-location-crosshairs" style="color: #2ED573; width: 20px;"></i> <b>Asignar Guardias:</b> Coloca puntos de vigilancia en el mapa para desplegar oficiales. La plataforma generará sus credenciales automáticamente.</li>
+          <li><i class="fa-solid fa-satellite-dish" style="color: #4ECDC4; width: 20px;"></i> <b>Despachar Alertas:</b> Haz clic en cualquier foco de incendio en el mapa y presiona "Enviar al Guardia" para que la alerta llegue a la App móvil del oficial en terreno.</li>
+        </ul>
+        <div style="margin-top: 20px; text-align: right; display:flex; justify-content:flex-end; gap: 10px;">
+          <button class="modal-btn" style="background:var(--panel-2); color:var(--text); border:1px solid var(--border);" onclick="closeWelcomeModal()">Saltar</button>
+          <button class="modal-btn" onclick="closeWelcomeModal(); startTutorial();">Iniciar Tutorial Paso a Paso</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div class="toast-stack" id="toast-stack"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Intro.js JS -->
+<script src="https://unpkg.com/intro.js/minified/intro.min.js"></script>
+
+<!-- Firebase SDK -->
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
